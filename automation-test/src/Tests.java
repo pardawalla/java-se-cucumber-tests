@@ -27,6 +27,8 @@ public class Tests {
     // Used by multiple methods in the class
     private WebDriver driver; 
     private WebDriverWait wait;
+    private Duration timeoutInSeconds = Duration.ofSeconds(60);
+    private Duration pollingTimeInMilliseconds = Duration.ofMillis(10);
     // Used in Test(s): OpenBrowser
     private String tradmeUrl = "https://www.trademe.co.nz/";
     private String trademeSiteTitle = "Buy & Sell on NZ's #1 Auction & Classifieds Site | Trade Me";
@@ -47,8 +49,8 @@ public class Tests {
     private void waitUntilSelectOptionsPopulated(final Select select)
     {
         new FluentWait<WebDriver>(driver)
-            .withTimeout(Duration.ofSeconds(60))
-            .pollingEvery(Duration.ofMillis(10))
+            .withTimeout(timeoutInSeconds)
+            .pollingEvery(pollingTimeInMilliseconds)
             .until(new Function<WebDriver, Boolean>() 
             {
                 public Boolean apply(WebDriver d) 
@@ -62,11 +64,10 @@ public class Tests {
     @BeforeClass
     public void Setup()
     {
-        Long timeOutInMilliseconds = (long) 5000;
         System.setProperty("webdriver.chrome.driver", "/Users/hussain/repos/java-se-cucumber-tests/drivers/chromedriver");
         driver = new ChromeDriver();
         driver.manage().window().maximize();
-        wait = new WebDriverWait(driver, Duration.ofMillis(timeOutInMilliseconds));
+        wait = new WebDriverWait(driver, timeoutInSeconds);
     }
 
     @AfterSuite
@@ -155,7 +156,7 @@ public class Tests {
 
     // Used in Test(s): ExistingListing
     private String numberPlateExpected = "MNE951";
-    private String kilometersExpected = "36698";
+    private String kilometersExpected = "36,698km";
     private String bodyExpected = "Hatchback";
     private String seatsExpected = "5";
     @Test (priority = 3)
@@ -163,20 +164,28 @@ public class Tests {
     {
 		driver.get(existingListingUrl);
         //wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[@class='tm-motors-vehicle-attributes__tag--content'])[1]")));
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(8));
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[@class='o-button2--primary o-button2']")));
+        //driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(8));
+        //wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[@class='o-button2--primary o-button2']")));
         
+        WebElement numberPlate = driver.findElement(By.xpath(("(//span[@class='o-tag__content']//div)[7]")));
+        String actualNumberPlate = numberPlate.getText();
+        System.out.println(actualNumberPlate);
+        Assert.assertTrue(actualNumberPlate.contains(numberPlateExpected));
+
         WebElement vehicleOdometer = driver.findElement(By.xpath(("(//span[@class='o-tag__content']//div)[1]")));
-        String actualKilometers = vehicleOdometer.getText();
+        String actualKilometers = vehicleOdometer.getText().trim();
         System.out.println(actualKilometers);
-	    // driver.findElement(By.linkText("Motors")).click();
-        // String expectedTitle = "Cars And Vehicles For Sale | Trade Me Motors";
-        // wait.until(ExpectedConditions.titleContains(expectedTitle));
-	    // String originalTitle = driver.getTitle();
-	    // Assert.assertEquals(originalTitle, expectedTitle);
+        Assert.assertEquals(actualKilometers, kilometersExpected);
 
+        WebElement body = driver.findElement(By.xpath(("(//span[@class='o-tag__content']//div)[2]")));
+        String actualBody = body.getText().trim();
+        System.out.println(actualBody);
+        Assert.assertEquals(actualBody, bodyExpected);
+
+        WebElement seats = driver.findElement(By.xpath(("(//span[@class='o-tag__content']//div)[3]")));
+        String actualSeats = seats.getText().trim();
+        System.out.println(actualSeats);
+        Assert.assertEquals(actualSeats, seatsExpected);
     }
-
-
 
 }
